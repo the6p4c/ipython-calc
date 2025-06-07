@@ -14,12 +14,13 @@
               (python312.withPackages
                 (pp: with pp; [ ipython numpy scipy matplotlib ]))
             ];
-            text = "exec ipython --config=${config}";
+            text = "exec ipython --config=${config}/ipython_config.py";
           };
           config = writeTextFile {
             name = "ipython-calc-config";
             text = ''
               c.TerminalIPythonApp.display_banner = False
+              c.TerminalInteractiveShell.confirm_exit = False
 
               c.InteractiveShellApp.exec_lines = [
                 """
@@ -32,10 +33,15 @@
                   text_formatter = get_ipython().display_formatter.formatters['text/plain']
                   text_formatter.for_type(int, int_formatter)
 
+                  print('✅ config loaded')
+
                   pass # suppress output
                 """,
               ]
             '';
+            # it seems as though this file *must* be named ipython_config.py, otherwise it fails to
+            # load.
+            destination = "/ipython_config.py";
           };
           desktop = makeDesktopItem {
             name = "ipython-calc-desktop";
