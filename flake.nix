@@ -14,7 +14,9 @@
               (python312.withPackages
                 (pp: with pp; [ ipython numpy scipy matplotlib ]))
             ];
-            text = "exec ipython --config=${config}/ipython_config.py";
+            text = ''
+              exec ipython --config=${config}/etc/ipython/ipython_config.py
+            '';
           };
           config = writeTextFile {
             name = "ipython-calc-config";
@@ -40,15 +42,19 @@
               ]
             '';
             # it seems as though this file *must* be named ipython_config.py, otherwise it fails to
-            # load.
-            destination = "/ipython_config.py";
+            # load. the rest of the path is just to make the final symlinkJoin derivation's file
+            # system structure look nice.
+            destination = "/etc/ipython/ipython_config.py";
           };
           desktop = makeDesktopItem {
-            name = "ipython-calc-desktop";
+            name = "ipython-calc";
             desktopName = "IPython";
             exec = "${ipython-calc}/bin/ipython-calc";
             terminal = true;
           };
-        in desktop;
+        in symlinkJoin {
+          name = "ipython-calc";
+          paths = [ ipython-calc config desktop ];
+        };
       });
 }
