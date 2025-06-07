@@ -6,9 +6,17 @@
   outputs = { nixpkgs, flake-utils, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let pkgs = import nixpkgs { inherit system; };
-      in {
+      in with pkgs; {
         packages.default = let
-          config = pkgs.writeTextFile {
+          ipython-calc = writeShellApplication {
+            name = "ipython-calc";
+            runtimeInputs = [
+              (python312.withPackages
+                (pp: with pp; [ ipython numpy scipy matplotlib ]))
+            ];
+            text = "exec ipython --config=${config}";
+          };
+          config = writeTextFile {
             name = "ipython-calc-config";
             text = ''
               c.TerminalIPythonApp.display_banner = False
@@ -28,17 +36,13 @@
                 """,
               ]
             '';
-            destination = "/etc/ipython_config.py";
           };
-        in pkgs.writeShellApplication {
-          name = "ipython-calc";
-          runtimeInputs = [
-            (pkgs.python312.withPackages
-              (pp: with pp; [ ipython numpy scipy matplotlib ]))
-          ];
-          text = ''
-            exec ipython --config=${config}/etc/ipython_config.py
-          '';
-        };
+          desktop = makeDesktopItem {
+            name = "ipython-calc-desktop";
+            desktopName = "IPython";
+            exec = "${ipython-calc}/bin/ipython-calc";
+            terminal = true;
+          };
+        in desktop;
       });
 }
